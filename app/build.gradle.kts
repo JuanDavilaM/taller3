@@ -41,6 +41,9 @@ android {
 }
 
 dependencies {
+
+    implementation("io.coil-kt:coil-compose:2.5.0")
+
     implementation(platform("com.google.firebase:firebase-bom:33.13.0"))
     implementation("com.google.firebase:firebase-analytics")
     implementation ("com.google.firebase:firebase-database-ktx")
@@ -48,6 +51,8 @@ dependencies {
     implementation("androidx.navigation:navigation-compose:2.7.7")
     // Google Maps Compose
     implementation("com.google.maps.android:maps-compose:2.11.4")
+    implementation("com.google.maps.android:maps-compose-utils:2.11.4")
+
 
     // Servicios de ubicación de Google Play
     implementation("com.google.android.gms:play-services-location:21.0.1")

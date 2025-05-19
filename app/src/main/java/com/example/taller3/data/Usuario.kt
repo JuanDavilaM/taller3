@@ -7,7 +7,8 @@ data class Usuario(
     var telefono: String = "",
     var enLinea: Boolean = false,
     var lat: Double = 0.0,
-    var lng: Double = 0.0
+    var lng: Double = 0.0,
+    var fotoUrl: String = ""  // ✅ AGREGADO AQUÍ
 ) {
-    constructor() : this("", "", "", "", false, 0.0, 0.0)
+    constructor() : this("", "", "", "", false, 0.0, 0.0, "")
 }

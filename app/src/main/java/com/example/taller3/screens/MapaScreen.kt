@@ -2,7 +2,12 @@ package com.example.taller3.screens
 
 import android.Manifest
 import android.annotation.SuppressLint
+import android.content.Context
 import android.content.pm.PackageManager
+import android.graphics.Bitmap
+import android.graphics.Canvas
+import android.graphics.drawable.BitmapDrawable
+import android.graphics.drawable.Drawable
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -11,10 +16,15 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.navigation.NavController
+import coil.ImageLoader
+import coil.request.ImageRequest
+import coil.request.SuccessResult
+import coil.request.ErrorResult
 import com.google.android.gms.location.*
 import com.google.android.gms.maps.model.*
 import com.google.firebase.auth.FirebaseAuth
@@ -43,6 +53,8 @@ fun MapaScreen(navController: NavController) {
     var route by remember { mutableStateOf(listOf<LatLng>()) }
     var otherUsers by remember { mutableStateOf<Map<String, LatLng>>(emptyMap()) }
     var otherRoutes by remember { mutableStateOf<Map<String, List<LatLng>>>(emptyMap()) }
+    var otherFotos by remember { mutableStateOf<Map<String, String>>(emptyMap()) }
+    val userIcons = remember { mutableStateMapOf<String, BitmapDescriptor>() }
 
     val permissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission(),
@@ -55,7 +67,6 @@ fun MapaScreen(navController: NavController) {
         }
     }
 
-    // Rastreo de ubicación
     DisposableEffect(trackingEnabled) {
         if (trackingEnabled) {
             val callback = object : LocationCallback() {
@@ -68,7 +79,6 @@ fun MapaScreen(navController: NavController) {
                         database.child(userId).updateChildren(
                             mapOf(
                                 "lat" to latLng.latitude,
-                                "lng" to latLng.longitude,
                                 "lng" to latLng.longitude,
                                 "enLinea" to true,
                                 "ruta" to route.map {
@@ -104,12 +114,13 @@ fun MapaScreen(navController: NavController) {
         onDispose { }
     }
 
-    // Escuchar otros usuarios
     LaunchedEffect(true) {
         database.limitToFirst(100).addValueEventListener(object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
                 val others = mutableMapOf<String, LatLng>()
                 val routes = mutableMapOf<String, List<LatLng>>()
+                val fotos = mutableMapOf<String, String>()
+
                 snapshot.children.forEach { userSnap ->
                     val uid = userSnap.key ?: return@forEach
                     if (uid != userId && userSnap.child("enLinea").value == true) {
@@ -123,17 +134,20 @@ fun MapaScreen(navController: NavController) {
                             if (plat != null && plng != null) LatLng(plat, plng) else null
                         }
                         routes[uid] = poly
+
+                        val foto = userSnap.child("fotoUrl").getValue(String::class.java)
+                        fotos[uid] = foto ?: ""
                     }
                 }
                 otherUsers = others
                 otherRoutes = routes
+                otherFotos = fotos
             }
 
             override fun onCancelled(error: DatabaseError) {}
         })
     }
 
-    // Interfaz
     Column(Modifier.fillMaxSize()) {
         Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
             Text("Rastreo activo")
@@ -155,25 +169,58 @@ fun MapaScreen(navController: NavController) {
             properties = MapProperties(isMyLocationEnabled = permissionGranted),
             uiSettings = MapUiSettings(zoomControlsEnabled = true)
         ) {
-            // Marcador propio
             currentPosition?.let {
                 Marker(
                     state = MarkerState(position = it),
                     title = "Tú",
                     icon = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_ORANGE)
                 )
-                Polyline(points = route, color = androidx.compose.ui.graphics.Color.Blue)
+                Polyline(points = route, color = Color.Blue)
             }
 
-            // Marcadores de otros
             otherUsers.forEach { (id, loc) ->
+                val url = otherFotos[id]
+                if (url != null && !userIcons.containsKey(id)) {
+                    LaunchedEffect(url) {
+                        val icon = getBitmapDescriptorFromUrl(context, url)
+                        userIcons[id] = icon
+                    }
+                }
+                val icon = userIcons[id] ?: BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN)
                 Marker(
                     state = MarkerState(position = loc),
                     title = "Usuario",
-                    icon = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN)
+                    icon = icon
                 )
-                Polyline(points = otherRoutes[id] ?: emptyList(), color = androidx.compose.ui.graphics.Color.Gray)
+                Polyline(points = otherRoutes[id] ?: emptyList(), color = Color.Gray)
             }
         }
     }
+}
+
+suspend fun getBitmapDescriptorFromUrl(context: Context, imageUrl: String): BitmapDescriptor {
+    val loader = ImageLoader(context)
+    val request = ImageRequest.Builder(context)
+        .data(imageUrl)
+        .allowHardware(false)
+        .build()
+
+    val result = loader.execute(request)
+
+    return if (result is SuccessResult) {
+        val drawable = result.drawable
+        val resized = drawable.toBitmap().let { Bitmap.createScaledBitmap(it, 120, 120, false) }
+        BitmapDescriptorFactory.fromBitmap(resized)
+    } else {
+        BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED)
+    }
+}
+
+fun Drawable.toBitmap(): Bitmap {
+    if (this is BitmapDrawable) return bitmap
+    val bitmap = Bitmap.createBitmap(intrinsicWidth, intrinsicHeight, Bitmap.Config.ARGB_8888)
+    val canvas = Canvas(bitmap)
+    setBounds(0, 0, canvas.width, canvas.height)
+    draw(canvas)
+    return bitmap
 }
