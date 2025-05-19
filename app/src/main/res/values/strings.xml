@@ -1,3 +1,48 @@
+
 <resources>
+
     <string name="app_name">Taller3</string>
+    <string name="bienvenido">Bienvenido</string>
+    <string name="iniciar_sesion">Iniciar sesión</string>
+    <string name="registrarse">Registrarse</string>
+
+    <string name="correo_electronico">Correo electrónico</string>
+    <string name="contrasena">Contraseña</string>
+    <string name="login_exitoso">Inicio de sesión exitoso</string>
+    <string name="error_generico">Error: %1$s</string>
+
+    <string name="menu_principal">Menú Principal</string>
+    <string name="modificar_perfil">Modificar perfil</string>
+    <string name="ver_mapa">Ver mapa</string>
+    <string name="cerrar_sesion">Cerrar sesión</string>
+
+    <string name="rastreo_activo">Rastreo activo</string>
+    <string name="tu">Tú</string>
+    <string name="usuario">Usuario</string>
+
+    <string name="mi_perfil">Mi Perfil</string>
+    <string name="nombre">Nombre</string>
+    <string name="correo_no_editable">Correo (no editable)</string>
+    <string name="telefono">Teléfono</string>
+    <string name="guardar_cambios">Guardar cambios</string>
+    <string name="contrasena_actual">Contraseña actual</string>
+    <string name="nueva_contrasena">Nueva contraseña</string>
+    <string name="cambiar_contrasena">Cambiar contraseña</string>
+    <string name="perfil_actualizado">Datos actualizados</string>
+    <string name="error_contrasena">Error al actualizar contraseña</string>
+    <string name="contrasena_incorrecta">Contraseña actual incorrecta</string>
+    <string name="error_cargar_perfil">Error al cargar perfil</string>
+    <string name="datos_actualizados">Datos actualizados</string>
+    <string name="contrasena_actualizada">Contraseña actualizada</string>
+    <string name="error_actualizar_contrasena">Error al actualizar contraseña</string>
+    <string name="contrasena_actual_incorrecta">Contraseña actual incorrecta</string>
+
+
+    <string name="registro">Registro</string>
+    <string name="tomar_foto">Tomar foto de perfil</string>
+    <string name="usuario_registrado">Usuario registrado</string>
+    <string name="completa_campos">Completa todos los campos y toma la foto</string>
+    <string name="permiso_camara_denegado">Permiso de cámara denegado</string>
+
+
 </resources>

@@ -18,6 +18,7 @@ import androidx.compose.ui.unit.dp
 import androidx.core.content.FileProvider
 import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
+import com.example.taller3.R
 import com.example.taller3.data.Usuario
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.FirebaseDatabase
@@ -37,20 +38,19 @@ fun RegistroScreen(navController: NavController) {
     val photoUri = remember { mutableStateOf<Uri?>(null) }
     val tempImageUri = remember { mutableStateOf<Uri?>(null) }
 
-
-    // Función para crear archivo temporal
+    //pasos para hacer lo de la foto y guardarla en firebase
+    //esto se usara para los marcadores personalizados y el bono
     fun createImageFile(context: Context): File {
         val timeStamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
         val storageDir = context.getExternalFilesDir(Environment.DIRECTORY_PICTURES)
         return File.createTempFile("JPEG_${timeStamp}_", ".jpg", storageDir)
     }
 
-    // Cámara
     val cameraLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.TakePicture()
     ) { success ->
         if (success) {
-            photoUri.value = tempImageUri.value // ✅ .value
+            photoUri.value = tempImageUri.value
         }
     }
 
@@ -64,10 +64,10 @@ fun RegistroScreen(navController: NavController) {
                 "${context.packageName}.provider",
                 imageFile
             )
-            tempImageUri.value = uri // ✅ .value
-            cameraLauncher.launch(uri) // ✅ pasas uri directo
+            tempImageUri.value = uri
+            cameraLauncher.launch(uri)
         } else {
-            Toast.makeText(context, "Permiso de cámara denegado", Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, context.getString(R.string.permiso_camara_denegado), Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -78,14 +78,14 @@ fun RegistroScreen(navController: NavController) {
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text("Registro", style = MaterialTheme.typography.headlineMedium)
+        Text(context.getString(R.string.registro), style = MaterialTheme.typography.headlineMedium)
 
         Spacer(modifier = Modifier.height(20.dp))
 
         OutlinedTextField(
             value = nombre.value,
             onValueChange = { nombre.value = it },
-            label = { Text("Nombre") },
+            label = { Text(context.getString(R.string.nombre)) },
             modifier = Modifier.fillMaxWidth()
         )
 
@@ -94,7 +94,7 @@ fun RegistroScreen(navController: NavController) {
         OutlinedTextField(
             value = email.value,
             onValueChange = { email.value = it },
-            label = { Text("Correo electrónico") },
+            label = { Text(context.getString(R.string.correo_electronico)) },
             modifier = Modifier.fillMaxWidth()
         )
 
@@ -103,7 +103,7 @@ fun RegistroScreen(navController: NavController) {
         OutlinedTextField(
             value = password.value,
             onValueChange = { password.value = it },
-            label = { Text("Contraseña") },
+            label = { Text(context.getString(R.string.contrasena)) },
             visualTransformation = PasswordVisualTransformation(),
             modifier = Modifier.fillMaxWidth()
         )
@@ -113,7 +113,7 @@ fun RegistroScreen(navController: NavController) {
         OutlinedTextField(
             value = telefono.value,
             onValueChange = { telefono.value = it },
-            label = { Text("Teléfono") },
+            label = { Text(context.getString(R.string.telefono)) },
             modifier = Modifier.fillMaxWidth()
         )
 
@@ -122,7 +122,7 @@ fun RegistroScreen(navController: NavController) {
         Button(onClick = {
             cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
         }) {
-            Text("Tomar foto de perfil")
+            Text(context.getString(R.string.tomar_foto))
         }
 
         photoUri.value?.let {
@@ -138,6 +138,7 @@ fun RegistroScreen(navController: NavController) {
 
         Button(
             onClick = {
+                //valores para nuestro firebase utilizadas para cumplir requrimientos del taller3
                 val auth = FirebaseAuth.getInstance()
                 val db = FirebaseDatabase.getInstance().getReference("usuarios")
                 val storage = FirebaseStorage.getInstance().reference
@@ -162,11 +163,11 @@ fun RegistroScreen(navController: NavController) {
                                         nombre = nombreVal,
                                         email = correo,
                                         telefono = tel,
-                                        fotoUrl = url.toString() // ✅ aquí se guarda la URL
+                                        fotoUrl = url.toString()
                                     )
                                     db.child(uid).setValue(usuario)
                                         .addOnSuccessListener {
-                                            Toast.makeText(context, "Usuario registrado", Toast.LENGTH_SHORT).show()
+                                            Toast.makeText(context, context.getString(R.string.usuario_registrado), Toast.LENGTH_SHORT).show()
                                             navController.navigate("main")
                                         }
                                 }
@@ -174,16 +175,16 @@ fun RegistroScreen(navController: NavController) {
                         }
                         .addOnFailureListener {
                             isLoading.value = false
-                            Toast.makeText(context, "Error: ${it.message}", Toast.LENGTH_LONG).show()
+                            Toast.makeText(context, context.getString(R.string.error_generico, it.message), Toast.LENGTH_LONG).show()
                         }
                 } else {
-                    Toast.makeText(context, "Completa todos los campos y toma la foto", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, context.getString(R.string.completa_campos), Toast.LENGTH_SHORT).show()
                 }
             },
             modifier = Modifier.fillMaxWidth(),
             enabled = !isLoading.value
         ) {
-            Text("Registrarse")
+            Text(context.getString(R.string.registrarse))
         }
     }
 }

@@ -9,8 +9,9 @@ import com.example.taller3.screens.RegistroScreen
 import com.example.taller3.screens.MainScreen
 import com.example.taller3.screens.LoginScreen
 import com.example.taller3.screens.PerfilScreen
-import com.example.taller3.screens.MapaScreen // 👈 nuevo import
+import com.example.taller3.screens.MapaScreen
 
+//codigos hechos por Juan Pablo Davila M, Alejandro Cañadas
 @Composable
 fun AppNavGraph(navController: NavHostController) {
     NavHost(
@@ -22,6 +23,6 @@ fun AppNavGraph(navController: NavHostController) {
         composable("login") { LoginScreen(navController) }
         composable("main") { MainScreen(navController) }
         composable("perfil") { PerfilScreen(navController) }
-        composable("mapa") { MapaScreen(navController) } // 👈 nueva ruta para el mapa
+        composable("mapa") { MapaScreen(navController) }
     }
 }

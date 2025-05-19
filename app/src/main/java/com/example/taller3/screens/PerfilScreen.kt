@@ -10,6 +10,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import com.example.taller3.R
 import com.example.taller3.data.Usuario
 import com.google.firebase.auth.EmailAuthProvider
 import com.google.firebase.auth.FirebaseAuth
@@ -42,7 +43,7 @@ fun PerfilScreen(navController: NavController) {
             }
 
             override fun onCancelled(error: DatabaseError) {
-                Toast.makeText(context, "Error al cargar perfil", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, context.getString(R.string.error_cargar_perfil), Toast.LENGTH_SHORT).show()
             }
         })
     }
@@ -54,13 +55,13 @@ fun PerfilScreen(navController: NavController) {
         verticalArrangement = Arrangement.Top,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text("Mi Perfil", style = MaterialTheme.typography.headlineMedium)
+        Text(context.getString(R.string.mi_perfil), style = MaterialTheme.typography.headlineMedium)
         Spacer(modifier = Modifier.height(24.dp))
 
         OutlinedTextField(
             value = nombre,
             onValueChange = { nombre = it },
-            label = { Text("Nombre") },
+            label = { Text(context.getString(R.string.nombre)) },
             modifier = Modifier.fillMaxWidth()
         )
 
@@ -69,7 +70,7 @@ fun PerfilScreen(navController: NavController) {
         OutlinedTextField(
             value = email,
             onValueChange = {},
-            label = { Text("Correo (no editable)") },
+            label = { Text(context.getString(R.string.correo_no_editable)) },
             enabled = false,
             modifier = Modifier.fillMaxWidth()
         )
@@ -79,7 +80,7 @@ fun PerfilScreen(navController: NavController) {
         OutlinedTextField(
             value = telefono,
             onValueChange = { telefono = it },
-            label = { Text("Teléfono") },
+            label = { Text(context.getString(R.string.telefono)) },
             modifier = Modifier.fillMaxWidth()
         )
 
@@ -89,20 +90,19 @@ fun PerfilScreen(navController: NavController) {
             onClick = {
                 dbRef.child("nombre").setValue(nombre)
                 dbRef.child("telefono").setValue(telefono)
-                Toast.makeText(context, "Datos actualizados", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, context.getString(R.string.datos_actualizados), Toast.LENGTH_SHORT).show()
             },
             modifier = Modifier.fillMaxWidth()
         ) {
-            Text("Guardar cambios")
+            Text(context.getString(R.string.guardar_cambios))
         }
 
         Spacer(modifier = Modifier.height(32.dp))
 
-        // Campos para cambio de contraseña
         OutlinedTextField(
             value = contrasenaActual,
             onValueChange = { contrasenaActual = it },
-            label = { Text("Contraseña actual") },
+            label = { Text(context.getString(R.string.contrasena_actual)) },
             visualTransformation = PasswordVisualTransformation(),
             modifier = Modifier.fillMaxWidth()
         )
@@ -112,7 +112,7 @@ fun PerfilScreen(navController: NavController) {
         OutlinedTextField(
             value = nuevaContrasena,
             onValueChange = { nuevaContrasena = it },
-            label = { Text("Nueva contraseña") },
+            label = { Text(context.getString(R.string.nueva_contrasena)) },
             visualTransformation = PasswordVisualTransformation(),
             modifier = Modifier.fillMaxWidth()
         )
@@ -127,21 +127,21 @@ fun PerfilScreen(navController: NavController) {
                     ?.addOnSuccessListener {
                         user.updatePassword(nuevaContrasena)
                             .addOnSuccessListener {
-                                Toast.makeText(context, "Contraseña actualizada", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(context, context.getString(R.string.contrasena_actualizada), Toast.LENGTH_SHORT).show()
                                 contrasenaActual = ""
                                 nuevaContrasena = ""
                             }
                             .addOnFailureListener {
-                                Toast.makeText(context, "Error al actualizar contraseña", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(context, context.getString(R.string.error_actualizar_contrasena), Toast.LENGTH_SHORT).show()
                             }
                     }
                     ?.addOnFailureListener {
-                        Toast.makeText(context, "Contraseña actual incorrecta", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, context.getString(R.string.contrasena_actual_incorrecta), Toast.LENGTH_SHORT).show()
                     }
             },
             modifier = Modifier.fillMaxWidth()
         ) {
-            Text("Cambiar contraseña")
+            Text(context.getString(R.string.cambiar_contrasena))
         }
     }
 }

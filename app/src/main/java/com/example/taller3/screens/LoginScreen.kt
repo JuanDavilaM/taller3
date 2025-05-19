@@ -7,9 +7,11 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import com.example.taller3.R
 import com.google.firebase.auth.FirebaseAuth
 
 @Composable
@@ -26,14 +28,14 @@ fun LoginScreen(navController: NavController) {
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text("Iniciar sesión", style = MaterialTheme.typography.headlineMedium)
+        Text(stringResource(R.string.iniciar_sesion), style = MaterialTheme.typography.headlineMedium)
 
         Spacer(modifier = Modifier.height(24.dp))
 
         OutlinedTextField(
             value = email.value,
             onValueChange = { email.value = it },
-            label = { Text("Correo electrónico") },
+            label = { Text(stringResource(R.string.correo_electronico)) },
             modifier = Modifier.fillMaxWidth()
         )
 
@@ -42,7 +44,7 @@ fun LoginScreen(navController: NavController) {
         OutlinedTextField(
             value = password.value,
             onValueChange = { password.value = it },
-            label = { Text("Contraseña") },
+            label = { Text(stringResource(R.string.contrasena)) },
             visualTransformation = PasswordVisualTransformation(),
             modifier = Modifier.fillMaxWidth()
         )
@@ -52,23 +54,27 @@ fun LoginScreen(navController: NavController) {
         Button(
             onClick = {
                 isLoading.value = true
-                FirebaseAuth.getInstance().signInWithEmailAndPassword(email.value, password.value)
+                FirebaseAuth.getInstance().signInWithEmailAndPassword(email.value, password.value) //aca hacemos lo de firebase auth
                     .addOnCompleteListener { task ->
                         isLoading.value = false
                         if (task.isSuccessful) {
-                            Toast.makeText(context, "Inicio de sesión exitoso", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, context.getString(R.string.login_exitoso), Toast.LENGTH_SHORT).show()
                             navController.navigate("main") {
                                 popUpTo("login") { inclusive = true }
                             }
                         } else {
-                            Toast.makeText(context, "Error: ${task.exception?.message}", Toast.LENGTH_LONG).show()
+                            Toast.makeText(
+                                context,
+                                context.getString(R.string.error_generico, task.exception?.message),
+                                Toast.LENGTH_LONG
+                            ).show()
                         }
                     }
             },
             modifier = Modifier.fillMaxWidth(),
             enabled = !isLoading.value
         ) {
-            Text("Iniciar sesión")
+            Text(stringResource(R.string.iniciar_sesion))
         }
     }
 }

@@ -25,12 +25,14 @@ import coil.ImageLoader
 import coil.request.ImageRequest
 import coil.request.SuccessResult
 import coil.request.ErrorResult
+import com.example.taller3.R
 import com.google.android.gms.location.*
 import com.google.android.gms.maps.model.*
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.*
 import com.google.maps.android.compose.*
 
+//pagina pricnicpal de la app, aqui suamos realtime y storage para las fotos de pefil para hacer el bono
 @SuppressLint("MissingPermission")
 @Composable
 fun MapaScreen(navController: NavController) {
@@ -120,6 +122,7 @@ fun MapaScreen(navController: NavController) {
     }
 
     LaunchedEffect(true) {
+        //database realtime y storage en las fotos de perfil (aqui las guardaremos)
         database.limitToFirst(100).addValueEventListener(object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
                 val others = mutableMapOf<String, LatLng>()
@@ -162,7 +165,7 @@ fun MapaScreen(navController: NavController) {
 
     Column(Modifier.fillMaxSize()) {
         Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
-            Text("Rastreo activo")
+            Text(LocalContext.current.getString(R.string.rastreo_activo))
             Spacer(Modifier.width(8.dp))
             Switch(checked = trackingEnabled, onCheckedChange = {
                 trackingEnabled = it
@@ -215,7 +218,7 @@ fun MapaScreen(navController: NavController) {
         }
     }
 }
-
+//para marcadores personalizados y el poder hacer el bono  usamos bitmap
 suspend fun getBitmapDescriptorFromUrl(context: Context, imageUrl: String): BitmapDescriptor {
     val loader = ImageLoader(context)
     val request = ImageRequest.Builder(context)
