@@ -54,7 +54,10 @@ fun MapaScreen(navController: NavController) {
     var otherUsers by remember { mutableStateOf<Map<String, LatLng>>(emptyMap()) }
     var otherRoutes by remember { mutableStateOf<Map<String, List<LatLng>>>(emptyMap()) }
     var otherFotos by remember { mutableStateOf<Map<String, String>>(emptyMap()) }
+    var otherNames by remember { mutableStateOf<Map<String, String>>(emptyMap()) }
     val userIcons = remember { mutableStateMapOf<String, BitmapDescriptor>() }
+    var myName by remember { mutableStateOf("Tú") }
+    var myFoto by remember { mutableStateOf<String?>(null) }
 
     val permissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission(),
@@ -67,51 +70,53 @@ fun MapaScreen(navController: NavController) {
         }
     }
 
-    DisposableEffect(trackingEnabled) {
-        if (trackingEnabled) {
-            val callback = object : LocationCallback() {
-                override fun onLocationResult(result: LocationResult) {
-                    result.lastLocation?.let { location ->
-                        val latLng = LatLng(location.latitude, location.longitude)
-                        currentPosition = latLng
-                        route = route + latLng
+    val callback = remember {
+        object : LocationCallback() {
+            override fun onLocationResult(result: LocationResult) {
+                result.lastLocation?.let { location ->
+                    val latLng = LatLng(location.latitude, location.longitude)
+                    currentPosition = latLng
+                    route = route + latLng
 
-                        database.child(userId).updateChildren(
-                            mapOf(
-                                "lat" to latLng.latitude,
-                                "lng" to latLng.longitude,
-                                "enLinea" to true,
-                                "ruta" to route.map {
-                                    mapOf("lat" to it.latitude, "lng" to it.longitude)
-                                }
-                            )
+                    database.child(userId).updateChildren(
+                        mapOf(
+                            "lat" to latLng.latitude,
+                            "lng" to latLng.longitude,
+                            "enLinea" to true,
+                            "ruta" to route.map {
+                                mapOf("lat" to it.latitude, "lng" to it.longitude)
+                            }
                         )
-                    }
+                    )
                 }
             }
+        }
+    }
 
+    DisposableEffect(trackingEnabled) {
+        if (trackingEnabled) {
             val request = LocationRequest.create().apply {
                 interval = 5000
                 fastestInterval = 2000
                 priority = Priority.PRIORITY_HIGH_ACCURACY
             }
-
             fusedLocationClient.requestLocationUpdates(request, callback, context.mainLooper)
-
-            onDispose {
-                fusedLocationClient.removeLocationUpdates(callback)
-                database.child(userId).updateChildren(mapOf(
-                    "enLinea" to false,
-                    "ruta" to null
-                ))
-            }
         } else {
+            fusedLocationClient.removeLocationUpdates(callback)
             database.child(userId).updateChildren(mapOf(
                 "enLinea" to false,
                 "ruta" to null
             ))
+            route = emptyList()
         }
-        onDispose { }
+        onDispose {
+            fusedLocationClient.removeLocationUpdates(callback)
+            database.child(userId).updateChildren(mapOf(
+                "enLinea" to false,
+                "ruta" to null
+            ))
+            route = emptyList()
+        }
     }
 
     LaunchedEffect(true) {
@@ -120,14 +125,18 @@ fun MapaScreen(navController: NavController) {
                 val others = mutableMapOf<String, LatLng>()
                 val routes = mutableMapOf<String, List<LatLng>>()
                 val fotos = mutableMapOf<String, String>()
+                val names = mutableMapOf<String, String>()
 
                 snapshot.children.forEach { userSnap ->
                     val uid = userSnap.key ?: return@forEach
-                    if (uid != userId && userSnap.child("enLinea").value == true) {
-                        val lat = userSnap.child("lat").getValue(Double::class.java) ?: return@forEach
-                        val lng = userSnap.child("lng").getValue(Double::class.java) ?: return@forEach
-                        others[uid] = LatLng(lat, lng)
+                    val lat = userSnap.child("lat").getValue(Double::class.java) ?: return@forEach
+                    val lng = userSnap.child("lng").getValue(Double::class.java) ?: return@forEach
 
+                    if (uid == userId) {
+                        myName = userSnap.child("nombre").getValue(String::class.java) ?: "Tú"
+                        myFoto = userSnap.child("fotoUrl").getValue(String::class.java)
+                    } else if (userSnap.child("enLinea").value == true) {
+                        others[uid] = LatLng(lat, lng)
                         val poly = userSnap.child("ruta").children.mapNotNull {
                             val plat = it.child("lat").getValue(Double::class.java)
                             val plng = it.child("lng").getValue(Double::class.java)
@@ -137,11 +146,14 @@ fun MapaScreen(navController: NavController) {
 
                         val foto = userSnap.child("fotoUrl").getValue(String::class.java)
                         fotos[uid] = foto ?: ""
+                        val nombre = userSnap.child("nombre").getValue(String::class.java)
+                        names[uid] = nombre ?: "Usuario"
                     }
                 }
                 otherUsers = others
                 otherRoutes = routes
                 otherFotos = fotos
+                otherNames = names
             }
 
             override fun onCancelled(error: DatabaseError) {}
@@ -170,10 +182,16 @@ fun MapaScreen(navController: NavController) {
             uiSettings = MapUiSettings(zoomControlsEnabled = true)
         ) {
             currentPosition?.let {
+                val myIcon = remember { mutableStateOf<BitmapDescriptor?>(null) }
+                LaunchedEffect(myFoto) {
+                    myFoto?.let { url ->
+                        myIcon.value = getBitmapDescriptorFromUrl(context, url)
+                    }
+                }
                 Marker(
                     state = MarkerState(position = it),
-                    title = "Tú",
-                    icon = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_ORANGE)
+                    title = myName,
+                    icon = myIcon.value ?: BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_ORANGE)
                 )
                 Polyline(points = route, color = Color.Blue)
             }
@@ -189,7 +207,7 @@ fun MapaScreen(navController: NavController) {
                 val icon = userIcons[id] ?: BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN)
                 Marker(
                     state = MarkerState(position = loc),
-                    title = "Usuario",
+                    title = otherNames[id] ?: "Usuario",
                     icon = icon
                 )
                 Polyline(points = otherRoutes[id] ?: emptyList(), color = Color.Gray)
